@@ -7,6 +7,7 @@ Setting up your Terratest environment
 2. Verify your system's Terraform environment by applying the included Terraform. Note: The Terraform uses remote modules on my github.
    a. If you prefer, clone that repository and change the source attributes for each of the module dependencies
    b. https://github.com/borisveis/terraform_modules
+   
    c.  % cd infrastructure
 4. d. % terraform init
 3. e. % terraform plan -out=planfile.out
