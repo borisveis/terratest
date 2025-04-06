@@ -38,7 +38,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_role_attach" {
 }
 
 module "codebuild" {
-  source          = "git@github.com:borisveis/terraform_modules.git//aws/codebuild"
+  source          = "github.com/borisveis/terraform_modules//aws/codebuild?ref=main"
   name            = "terratest_learn"
   source_location = "https://github.com/borisveis/LLMTesting.git"
   codebuild_image = "aws/codebuild/standard:4.0"
