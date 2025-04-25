@@ -37,6 +37,21 @@ func TestTerraformS3BucketCreation(t *testing.T) {
 	var response map[string]interface{}
 	err = json.Unmarshal([]byte(body), &response)
 	assert.NoError(t, err)
+	// ✅ Assert that 'timestamp_ms' exists in response
+	timestampRaw, exists := response["timestamp_ms"]
+	assert.True(t, exists, "'timestamp_ms' key should exist in response")
+
+	// ✅ Assert it's a float64 (JSON numbers are float64 in Go)
+	timestampFloat, ok := timestampRaw.(float64)
+	assert.True(t, ok, "'timestamp_ms' should be a number (float64)")
+	// ✅ Assert it can be parsed as a duration in milliseconds
+	_, err = time.ParseDuration(fmt.Sprintf("%.0fms", timestampFloat))
+	assert.NoError(t, err, "'timestamp_ms' should be a valid millisecond duration")
+
+	// Optional: Assert it's not from the year 1970 (i.e., it's "recent")
+	ms := int64(timestampFloat)
+	timestamp := time.UnixMilli(ms)
+	assert.True(t, timestamp.After(time.Now().Add(-24*time.Hour)), "'timestamp_ms' should be within the last 24 hours")
 
 	// Assert that the required outputs are not empty
 	assert.NotEmpty(t, bucketArn)
