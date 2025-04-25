@@ -1,33 +1,59 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTerraformS3BucketCreation(t *testing.T) {
-	// Define Terraform options
 	terraformOptions := &terraform.Options{
 		TerraformDir: "./infrastructure", // Adjust the path to where your Terraform files are located
 	}
 
-	// Clean up after the test
 	defer terraform.Destroy(t, terraformOptions)
-
-	// Initialize and apply the Terraform configuration
 	terraform.InitAndApply(t, terraformOptions)
 
-	// Retrieve the resource ARNs and ip
 	codebuildArn := terraform.Output(t, terraformOptions, "codebuild_arn")
 	bucketArn := terraform.Output(t, terraformOptions, "bucket_arn")
-	ec2_ip := terraform.Output(t, terraformOptions, "ec2_ip")
-	assert.NotEmpty(t, ec2_ip)
+	applicationIP := terraform.Output(t, terraformOptions, "application_ip")
 
-// 	Assert that the bucket ARN is not empty (indicating the S3 bucket was created)
+	url := "http://" + applicationIP + ":8000"
+	maxRetries := 10
+	timeBetweenRetries := 5 * time.Second
+
+	// Get status code and body for further use
+	statusCode, body, err := GetWithRetry(url, maxRetries, timeBetweenRetries)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, statusCode)
+
+	// Parse and assert JSON response
+	var response map[string]interface{}
+	err = json.Unmarshal([]byte(body), &response)
+	assert.NoError(t, err)
+
+	// Assert that the required outputs are not empty
 	assert.NotEmpty(t, bucketArn)
-	// Assert that the codebuild_arn is not empty (indicating the S3 bucket was created)
 	assert.NotEmpty(t, codebuildArn)
-	// Assert that the instance's ip is not empty (indicating the Spublic ip availabilty)
+	assert.NotEmpty(t, applicationIP)
+}
+
+// Custom helper for retrying an HTTP request
+func GetWithRetry(url string, maxRetries int, wait time.Duration) (int, string, error) {
+	for i := 0; i < maxRetries; i++ {
+		resp, err := http.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			defer resp.Body.Close()
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			return resp.StatusCode, string(bodyBytes), nil
+		}
+		time.Sleep(wait)
+	}
+	return 0, "", fmt.Errorf("failed to get a successful response after %d retries", maxRetries)
 }

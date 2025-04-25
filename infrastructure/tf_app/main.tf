@@ -94,24 +94,24 @@ resource "aws_instance" "application" {
     }
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update",
-      "sudo apt install -y python3-pip",
-      "mkdir -p ${local.remote_app_path}",
-      "pip3 install --user -r ${local.remote_app_path}/requirements.txt",  # install to ~/.local/bin
-      "echo 'export PATH=$PATH:/home/ubuntu/.local/bin' >> ~/.bashrc",  # update path
-      "source ~/.bashrc",  # ensure the new path is loaded
-      "nohup uvicorn app:app --host 0.0.0.0 --port 8000 &"  # start FastAPI app in the background
-    ]
+ provisioner "remote-exec" {
+  inline = [
+    "sudo apt update",
+    "sudo apt install -y python3-pip",
+    "mkdir -p ${local.remote_app_path}",
+    "pip3 install --user -r ${local.remote_app_path}/requirements.txt",
+    "cd ${local.remote_app_path}",
+    "nohup /home/ubuntu/.local/bin/uvicorn app:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &",
+    "sleep 5"
+  ]
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file(var.private_key_path)
-      host        = self.public_ip
-    }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
+    host        = self.public_ip
   }
+}
 
   tags = {
     Name = "fastapi-app"
