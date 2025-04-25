@@ -1,5 +1,5 @@
 # Terratest
- example usages of Terratest
+ Deploy a rest API app to AWS and verify its functionality
 
 **Prerequisites:**
 1. AWS profile(s) and respective configuration(s) in ~/.aws.
