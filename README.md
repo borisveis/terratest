@@ -13,13 +13,16 @@ How you've configured your AWS connectivity doesn't matter as long as you can cr
 
 6. **What Terratest does**
 Executes terraform in 'infrastructure/main.tf'
+Deploys fast API app defined in app/app.py, In this case, a RESTfull application sho's GET response returns current milisecond time.
 1. Retrieves some outputs from invoked terraform
 2. Utilizes terraform outputs assigned to variables making assertions on their values.
+3. Sends GET request to the public IP of deployed app and verifies treponse is a valid milisecond time
 3. Finally: Terratest destroys all the resources it created regardless of the test(s) outcome.
 Updates in branch: zero_down_time
 terraform creates all necessary resources an deploys app/appy.py to an AWS instances with an exposed public IP.
-Currently the app is a FastAPI endpoint responding with the current milisecond time.
-After terraform complcompletes, the public IP will be returned as 'application_ip'
+**Alternative manual validation.**
+1. execute the terraform i /infrastructure
+2. upon successfull apply deployment, output `application_ip` returns the public ip of the deployed application.
 Access the endpoint with
 curl http://1.2.3.4:8000 , replacing 1.2.3.4 with the ip returned by terraform
 The response should look like {"timestamp_ms":1745524089947}
