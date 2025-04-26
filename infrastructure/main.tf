@@ -53,7 +53,7 @@ module "s3" {
 
 # --- CodeBuild Module ---
 module "codebuild" {
-  source           = "github.com/borisveis/terraform_modules//aws/codebuild?ref=main"
+  source           = "github.com/borisveis/terraform_modules//aws/codebuild"
   name             = "terratest_learn"
   source_location  = "https://github.com/borisveis/LLMTesting.git"
   codebuild_image  = "aws/codebuild/standard:4.0"
